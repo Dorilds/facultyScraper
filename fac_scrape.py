@@ -99,25 +99,67 @@ def get_images(link):
 
     return filenames
 
+def get_biography(url):
+
+    response = simple_get(url)
+    print(url)
+    if response is not None:
+        html = BeautifulSoup(response, 'html.parser')
+        print("hmm")
+        for p in html.find("div", {"id": "body"}).find_all('p'):
+            pdb.set_trace()
+
+
 def main():
 
-    #url = "https://www.swarthmore.edu/classics/faculty-staff"
     url_beginning = "https://www.swarthmore.edu"
     dept_links, depts = get_depts()
     all_faculty = {}
+    faculty_bios = {}
+    all_fac_list = []
     parsed_faculty = []
     for i,link in enumerate(dept_links):
-        url = url_beginning + link + '/faculty-staff'
+        if "art-" in link:
+            url = url_beginning + '/art' + '/faculty-staff'
+        elif "biochemistry" in link or "education" in link\
+                or "english" in link or 'islamic' in link:
+            url = url_beginning + link + '/faculty-and-staff'
+        elif depts[i] == "Computer Science":
+            url = url_beginning + '/computer-science' + '/faculty-staff'
+        elif depts[i] == "Japanese":
+            url = url_beginning + link + '/faculty-staff-教員'
+        elif "film" in link or "medieval" in link:
+            url = url_beginning + link + '/faculty'
+        elif depts[i] == "Design Your Own Major":
+            # skip no faculty
+            continue
+        else:
+            url = url_beginning + link + '/faculty-staff'
         response = simple_get(url)
         faculty = dept_faculty(response)
-        all_faculty[depts[i]] = faculty
+        print(depts[i])
         for f in faculty:
-            parsed_faculty += f.lower().replace(" ", "-")
-    #for pf in parsed_faculty:
-        #url = url_beginning + '/profile'
-        #files = get_images(url)
+            all_fac_list.append(f)
+            faculty_bios[f] = ""
+            parsed_faculty.append(f.lower().replace(" ", "-"))
+        all_faculty[depts[i]] = faculty
 
     #pprint.pprint(all_faculty)
+    # remove dups
+    parsed_faculty = set(parsed_faculty)
+    parsed_faculty = list(parsed_faculty)
+    all_fac_list = set(all_fac_list)
+    all_fac_list = list(all_fac_list)
+    #print(parsed_faculty)
+
+
+    # Download the Images for each prof and bios
+    for i,pf in enumerate(parsed_faculty):
+        print(all_fac_list[i])
+        url = url_beginning + '/profile/' + pf
+        faculty_bios[all_fac_list[i]] = get_biography(url)
+        #files = get_images(url)
+
 
 
 
